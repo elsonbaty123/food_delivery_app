@@ -117,6 +117,7 @@ class AuthProvider with ChangeNotifier {
     required String email,
     required String phone,
     required String password,
+    UserType userType = UserType.customer,
   }) async {
     _isLoading = true;
     _error = null;
@@ -132,6 +133,7 @@ class AuthProvider with ChangeNotifier {
         name: name,
         email: email,
         phoneNumber: phone,
+        userType: userType,
         createdAt: DateTime.now(),
         notificationPreferences: {
           'order_updates': true,

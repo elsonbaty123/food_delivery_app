@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../providers/meal_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/location_provider.dart';
+import '../location/location_search_screen.dart';
 import '../../models/meal.dart';
 import '../../models/category.dart';
 import '../meal_details/meal_details_screen.dart';
@@ -20,7 +22,56 @@ class HomeScreen extends StatelessWidget {
         
         return Scaffold(
           appBar: AppBar(
-            title: const Text('مطبخ البيت'),
+            title: Consumer<LocationProvider>(
+              builder: (context, locationProvider, _) {
+                return GestureDetector(
+                  onTap: () async {
+                    final selectedLocation = await Navigator.pushNamed(
+                      context, 
+                      LocationSearchScreen.routeName,
+                    );
+                    if (selectedLocation != null && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('تم تحديث الموقع بنجاح'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'التوصيل إلى',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            locationProvider.currentLocation?.name ?? 'تحديد الموقع',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.keyboard_arrow_down,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
             centerTitle: true,
             actions: [
               IconButton(
@@ -29,42 +80,43 @@ class HomeScreen extends StatelessWidget {
                   Navigator.pushNamed(context, SearchScreen.routeName);
                 },
               ),
-              Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.shopping_cart_outlined),
-                    onPressed: () {
-                      // Navigate to cart screen
-                    },
-                  ),
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
-                      child: Consumer<CartProvider>(
-                        builder: (context, cart, _) {
-                          return Text(
-                            '${cart.itemCount}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                            ),
-                            textAlign: TextAlign.center,
-                          );
+              Consumer<CartProvider>(
+                builder: (context, cart, _) {
+                  return Stack(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.shopping_cart_outlined),
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/cart');
                         },
                       ),
-                    ),
-                  ),
-                ],
+                      if (cart.itemCount > 0)
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              '${cart.itemCount > 99 ? '99+' : cart.itemCount}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -334,65 +386,56 @@ class HomeScreen extends StatelessWidget {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 160,
-        margin: const EdgeInsets.only(left: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withAlpha((255 * 0.1).round()),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
-                  ),
-                  child: Image.network(
-                    meal.imageUrl,
-                    height: MediaQuery.of(context).size.height * 0.35,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      height: MediaQuery.of(context).size.height * 0.35,
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.fastfood, size: 40, color: Colors.grey),
+        child: Container(
+          width: 200,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
                     ),
-                  ),
-                ),
-                if (isInCart)
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.green,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 16,
+                    child: Image.network(
+                      meal.imageUrl,
+                      height: 120,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 120,
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.fastfood, size: 40, color: Colors.grey),
                       ),
                     ),
                   ),
-              ],
-            ),
-            // Details
-            Expanded(
-              child: Padding(
+                  if (isInCart)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              // Details
+              Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -425,7 +468,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -452,8 +495,8 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

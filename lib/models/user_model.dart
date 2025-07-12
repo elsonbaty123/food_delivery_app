@@ -1,4 +1,9 @@
 
+enum UserType {
+  customer,
+  chef,
+}
+
 class UserModel {
   final String id;
   final String name;
@@ -15,6 +20,7 @@ class UserModel {
   final List<dynamic>? coupons; // List of coupon IDs or coupon objects
   final List<dynamic>? orderHistory; // List of order IDs or order objects
   final String profileImageUrl; // URL to the user's profile image
+  final UserType userType; // Type of user (customer or chef)
 
   // Check if notifications are enabled (default to true if not set)
   bool get notificationsEnabled => notificationPreferences['order_updates'] ?? true;
@@ -23,6 +29,7 @@ class UserModel {
     required this.id,
     required this.name,
     required this.email,
+    this.userType = UserType.customer, // Default to customer
     this.phoneNumber,
     this.imageUrl,
     List<Address>? addresses,
@@ -46,7 +53,7 @@ class UserModel {
          'new_meals': true,
          'account_activity': true,
        };
-       
+
   // Convert UserModel to a Map for JSON serialization
   Map<String, dynamic> toJson() {
     return {
@@ -62,12 +69,13 @@ class UserModel {
       'coupons': coupons,
       'orderHistory': orderHistory,
       'profileImageUrl': profileImageUrl,
+      'userType': userType.toString().split('.').last,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
       'notificationPreferences': notificationPreferences,
     };
   }
-  
+
   // Create UserModel from JSON
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
@@ -83,6 +91,7 @@ class UserModel {
       coupons: json['coupons'],
       orderHistory: json['orderHistory'],
       profileImageUrl: json['profileImageUrl'] ?? '',
+      userType: UserType.values.firstWhere((element) => element.toString().split('.').last == json['userType']),
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
       notificationPreferences: Map<String, bool>.from(json['notificationPreferences'] ?? {}),
@@ -101,6 +110,7 @@ class UserModel {
       'paymentMethods': paymentMethods.map((pm) => pm.toMap()).toList(),
       'favoriteMealIds': favoriteMealIds,
       'notification_preferences': notificationPreferences,
+      'userType': userType.toString().split('.').last,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
@@ -128,6 +138,7 @@ class UserModel {
       notificationPreferences: map['notification_preferences'] != null
           ? Map<String, bool>.from(map['notification_preferences'])
           : null,
+      userType: UserType.values.firstWhere((element) => element.toString().split('.').last == map['userType']),
       createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt']) : null,
       updatedAt: map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : null,
     );
@@ -147,9 +158,10 @@ class UserModel {
     List<dynamic>? coupons,
     List<dynamic>? orderHistory,
     String? profileImageUrl,
-    Map<String, bool>? notificationPreferences,
+    UserType? userType,
     DateTime? createdAt,
     DateTime? updatedAt,
+    Map<String, bool>? notificationPreferences,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -164,9 +176,10 @@ class UserModel {
       coupons: coupons ?? this.coupons,
       orderHistory: orderHistory ?? this.orderHistory,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
-      notificationPreferences: notificationPreferences ?? this.notificationPreferences,
+      userType: userType ?? this.userType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      notificationPreferences: notificationPreferences ?? this.notificationPreferences,
     );
   }
 }

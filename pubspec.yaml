@@ -47,6 +47,12 @@ dependencies:
   # For loading images from the web
   cached_network_image: ^3.3.1
   
+  # Location services
+  geolocator: ^10.1.0
+  geocoding: ^2.1.1
+  google_maps_flutter: ^2.5.3
+  location: ^5.0.3
+  
   # For showing toast messages
   fluttertoast: ^8.2.4
   

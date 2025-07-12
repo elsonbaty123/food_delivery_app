@@ -18,6 +18,8 @@ import 'providers/meal_provider.dart';
 import 'providers/category_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/order_provider.dart';
+import 'providers/location_provider.dart';
+import 'screens/location/location_search_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +38,7 @@ class FoodDeliveryApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MealProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => LocationProvider()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
@@ -71,13 +74,14 @@ class FoodDeliveryApp extends StatelessWidget {
                   ? const HomePage() 
                   : const LoginScreen(),
                   
+              // Other Routes
               MealDetailsScreen.routeName: (context) => 
                   MealDetailsScreen(
                     mealId: ModalRoute.of(context)!.settings.arguments as String,
                   ),
                     
               SearchScreen.routeName: (context) => const SearchScreen(),
-              '/orders': (context) => const OrdersScreen(),
+              LocationSearchScreen.routeName: (context) => const LocationSearchScreen(),
             },
             onGenerateRoute: (settings) {
               // Handle any other named routes here if needed
@@ -137,11 +141,28 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onItemTapped(int index) {
-    // For protected screens, check authentication
-    if (index >= 2 && !Provider.of<AuthProvider>(context, listen: false).isAuthenticated) {
-      // Show login screen if trying to access protected screens
-      Navigator.pushNamed(context, LoginScreen.routeName);
-      return;
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    if (index == 3) { // Profile tab
+      if (!authProvider.isAuthenticated) {
+        // Show auth screen in a dialog
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (context) => const LoginScreen(),
+        );
+        return;
+      }
+    } else if (index == 2) { // Cart tab
+      if (!authProvider.isAuthenticated) {
+        // Show auth screen in a dialog
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (context) => const LoginScreen(),
+        );
+        return;
+      }
     }
     
     setState(() {
@@ -150,26 +171,68 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Widget _buildAuthScreen() {
+    return Navigator(
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case SignUpScreen.routeName:
+            return MaterialPageRoute(builder: (_) => const SignUpScreen());
+          case ForgotPasswordScreen.routeName:
+            return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
+          case LoginScreen.routeName:
+          default:
+            return MaterialPageRoute(builder: (_) => const LoginScreen());
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Check if user is authenticated before showing main app
     final authProvider = Provider.of<AuthProvider>(context);
-    
-    if (!authProvider.isAuthenticated) {
-      // If not authenticated, show login screen
-      return const LoginScreen();
-    }
     
     return Scaffold(
       body: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
         children: _screens,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onPageChanged: _onPageChanged,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Theme.of(context).primaryColor,
+        unselectedItemColor: Colors.grey,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'الرئيسية',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.category_outlined),
+            activeIcon: Icon(Icons.category),
+            label: 'الأقسام',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart_outlined),
+            activeIcon: Icon(Icons.shopping_cart),
+            label: 'السلة',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long_outlined),
+            activeIcon: Icon(Icons.receipt_long),
+            label: 'طلباتي',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'حسابي',
+          ),
+        ],
       ),
     );
   }

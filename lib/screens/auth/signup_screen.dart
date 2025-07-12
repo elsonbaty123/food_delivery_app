@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:food_delivery_app/models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/primary_button.dart';
@@ -22,6 +23,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  UserType _userType = UserType.customer; // Default to customer
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -47,6 +49,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         phone: _phoneController.text.trim(),
+        userType: _userType,
         password: _passwordController.text,
       );
 
@@ -205,7 +208,43 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     },
                   ),
                 ),
-                const SizedBox(height: 32),
+                // User Type Selection
+                const SizedBox(height: 16),
+                Text("نوع المستخدم", style: Theme.of(context).textTheme.bodyLarge),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: RadioListTile<UserType>(
+                        title: const Text('عميل'),
+                        value: UserType.customer,
+                        groupValue: _userType,
+                        onChanged: (UserType? value) {
+                          if (value != null) {
+                            setState(() {
+                              _userType = value;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: RadioListTile<UserType>(
+                        title: const Text('طاهٍ'),
+                        value: UserType.chef,
+                        groupValue: _userType,
+                        onChanged: (UserType? value) {
+                          if (value != null) {
+                            setState(() {
+                              _userType = value;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
 
                 // Sign Up Button
                 PrimaryButton(
