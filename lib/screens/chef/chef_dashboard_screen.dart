@@ -23,7 +23,9 @@ class ChefDashboardScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () {},
+            onPressed: () {
+            Navigator.of(context).pushNamed('/profile');
+          },
           ),
         ],
       ),
@@ -50,16 +52,16 @@ class ChefDashboardScreen extends StatelessWidget {
               mainAxisSpacing: 8,
               children: [
                 _buildActionButton('إدارة الوجبات', Icons.restaurant_menu, () {
-                  Provider.of<AuthProvider>(context, listen: false).navigatorKey.currentState!.pushNamed(ManageMealsScreen.routeName);
+                  Navigator.of(context).pushNamed(ManageMealsScreen.routeName);
                 }, context),
                 _buildActionButton('إضافة وجبة', Icons.add_circle_outline, () {
-                  Provider.of<AuthProvider>(context, listen: false).navigatorKey.currentState!.pushNamed(EditMealScreen.routeName);
+                  Navigator.of(context).pushNamed(EditMealScreen.routeName);
                 }, context),
                 _buildActionButton('الطلبات الجديدة', Icons.new_releases, () {
-                  Provider.of<AuthProvider>(context, listen: false).navigatorKey.currentState!.pushNamed('/new-orders');
+                  Navigator.of(context).pushNamed('/new-orders');
                 }, context),
                 _buildActionButton('قسائم التخفيض', Icons.discount, () {
-                  Provider.of<AuthProvider>(context, listen: false).navigatorKey.currentState!.pushNamed(CouponManagementScreen.routeName);
+                  Navigator.of(context).pushNamed(CouponManagementScreen.routeName);
                 }, context),
               ],
             ),

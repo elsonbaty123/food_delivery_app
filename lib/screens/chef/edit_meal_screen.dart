@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -22,6 +23,7 @@ class _EditMealScreenState extends State<EditMealScreen> {
   bool _isInit = true;
   bool _isLoading = false;
   File? _pickedImage;
+  String? _pickedImageUrl;
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -31,9 +33,15 @@ class _EditMealScreenState extends State<EditMealScreen> {
     );
     
     if (pickedImage != null) {
-      setState(() {
-        _pickedImage = File(pickedImage.path);
-      });
+      if (kIsWeb) {
+        setState(() {
+          _pickedImageUrl = pickedImage.path;
+        });
+      } else {
+        setState(() {
+          _pickedImage = File(pickedImage.path);
+        });
+      }
     }
   }
 
@@ -202,11 +210,13 @@ class _EditMealScreenState extends State<EditMealScreen> {
                         decoration: BoxDecoration(
                           border: Border.all(width: 1, color: Colors.grey),
                         ),
-                        child: _pickedImage != null
-                            ? Image.file(_pickedImage!, fit: BoxFit.cover)
-                            : _editedMeal.imageUrl.isNotEmpty
-                                ? Image.network(_editedMeal.imageUrl, fit: BoxFit.cover)
-                                : const Column(
+                        child: _pickedImageUrl != null
+                            ? Image.network(_pickedImageUrl!, fit: BoxFit.cover)
+                            : _pickedImage != null
+                                ? Image.file(_pickedImage!, fit: BoxFit.cover)
+                                : _editedMeal.imageUrl.isNotEmpty
+                                    ? Image.network(_editedMeal.imageUrl, fit: BoxFit.cover)
+                                    : const Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Icon(Icons.add_a_photo, size: 50),
