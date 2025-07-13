@@ -1,25 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'package:flutter_localizations/flutter_localizations.dart';
+
+// Screens
 import 'screens/home/home_screen.dart';
 import 'screens/categories/categories_screen.dart';
 import 'screens/cart/cart_screen.dart';
 import 'screens/profile/profile_screen.dart';
-import 'screens/orders/orders_screen.dart';
+import 'screens/orders_screen.dart';
+import 'screens/addresses_screen.dart';
+import 'screens/add_edit_address_screen.dart';
+import 'screens/favorites_screen.dart';
 import 'screens/meal_details/meal_details_screen.dart';
 import 'screens/search/search_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
+import 'screens/location/location_search_screen.dart';
 
+// Constants
 import 'constants/app_constants.dart';
+
+// Providers
 import 'providers/cart_provider.dart';
 import 'providers/meal_provider.dart';
 import 'providers/category_provider.dart';
 import 'providers/auth_provider.dart';
-import 'providers/order_provider.dart';
+import 'providers/orders_provider.dart';
+import 'providers/addresses_provider.dart';
 import 'providers/location_provider.dart';
-import 'screens/location/location_search_screen.dart';
+import 'providers/theme_provider.dart';
+import 'providers/locale_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,8 +49,11 @@ class FoodDeliveryApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => MealProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
-        ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => OrdersProvider()),
+        ChangeNotifierProvider(create: (_) => AddressesProvider()),
         ChangeNotifierProvider(create: (_) => LocationProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
@@ -65,28 +80,31 @@ class FoodDeliveryApp extends StatelessWidget {
             initialRoute: authProvider.isAuthenticated ? '/' : LoginScreen.routeName,
             routes: {
               // Auth Routes
-              LoginScreen.routeName: (context) => const LoginScreen(),
-              SignUpScreen.routeName: (context) => const SignUpScreen(),
-              ForgotPasswordScreen.routeName: (context) => const ForgotPasswordScreen(),
+              LoginScreen.routeName: (ctx) => const LoginScreen(),
+                                      SignUpScreen.routeName: (ctx) => const SignUpScreen(),
+              ForgotPasswordScreen.routeName: (ctx) => const ForgotPasswordScreen(),
               
               // Main App Routes
-              '/': (context) => authProvider.isAuthenticated 
+              '/': (ctx) => authProvider.isAuthenticated 
                   ? const HomePage() 
                   : const LoginScreen(),
                   
-              // Other Routes
-              MealDetailsScreen.routeName: (context) => 
-                  MealDetailsScreen(
-                    mealId: ModalRoute.of(context)!.settings.arguments as String,
-                  ),
-                    
-              SearchScreen.routeName: (context) => const SearchScreen(),
-              LocationSearchScreen.routeName: (context) => const LocationSearchScreen(),
+              // Feature Screens
+              CategoriesScreen.routeName: (ctx) => const CategoriesScreen(),
+              CartScreen.routeName: (ctx) => const CartScreen(),
+              SearchScreen.routeName: (ctx) => const SearchScreen(),
+              LocationSearchScreen.routeName: (ctx) => const LocationSearchScreen(),
+              ProfileScreen.routeName: (ctx) => const ProfileScreen(),
+              OrdersScreen.routeName: (ctx) => const OrdersScreen(),
+              AddressesScreen.routeName: (ctx) => const AddressesScreen(),
+              AddEditAddressScreen.routeName: (ctx) => const AddEditAddressScreen(),
+              FavoritesScreen.routeName: (ctx) => const FavoritesScreen(),
+              MealDetailsScreen.routeName: (ctx) {
+                final args = ModalRoute.of(ctx)!.settings.arguments;
+                return MealDetailsScreen(mealId: args as String);
+              },
             },
-            onGenerateRoute: (settings) {
-              // Handle any other named routes here if needed
-              return null;
-            },
+
           );
         },
       ),

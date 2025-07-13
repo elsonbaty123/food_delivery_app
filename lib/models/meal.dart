@@ -1,3 +1,5 @@
+import 'enums.dart';
+
 class Meal {
   final String id;
   final String name;
@@ -9,6 +11,8 @@ class Meal {
   final bool isPopular;
   final bool isRecommended;
   final int preparationTime; // in minutes
+  final Complexity complexity;
+  final Affordability affordability;
   final List<String> ingredients;
   final Map<String, int> nutrition; // e.g., {'calories': 500, 'protein': 25, ...}
 
@@ -23,6 +27,8 @@ class Meal {
     this.isPopular = false,
     this.isRecommended = false,
     this.preparationTime = 30,
+    this.complexity = Complexity.Simple,
+    this.affordability = Affordability.Affordable,
     List<String>? ingredients,
     Map<String, int>? nutrition,
   })  : ingredients = ingredients ?? [],
@@ -47,6 +53,8 @@ class Meal {
       'isPopular': isPopular,
       'isRecommended': isRecommended,
       'preparationTime': preparationTime,
+      'complexity': complexity.index,
+      'affordability': affordability.index,
       'ingredients': ingredients,
       'nutrition': nutrition,
     };
@@ -65,6 +73,8 @@ class Meal {
       isPopular: map['isPopular'] ?? false,
       isRecommended: map['isRecommended'] ?? false,
       preparationTime: map['preparationTime'] ?? 30,
+      complexity: Complexity.values[map['complexity'] ?? 0],
+      affordability: Affordability.values[map['affordability'] ?? 0],
       ingredients: List<String>.from(map['ingredients'] ?? []),
       nutrition: Map<String, int>.from(map['nutrition'] ?? {}),
     );
@@ -82,6 +92,8 @@ class Meal {
     bool? isPopular,
     bool? isRecommended,
     int? preparationTime,
+    Complexity? complexity,
+    Affordability? affordability,
     List<String>? ingredients,
     Map<String, int>? nutrition,
   }) {
@@ -96,6 +108,8 @@ class Meal {
       isPopular: isPopular ?? this.isPopular,
       isRecommended: isRecommended ?? this.isRecommended,
       preparationTime: preparationTime ?? this.preparationTime,
+      complexity: complexity ?? this.complexity,
+      affordability: affordability ?? this.affordability,
       ingredients: ingredients ?? this.ingredients,
       nutrition: nutrition ?? this.nutrition,
     );

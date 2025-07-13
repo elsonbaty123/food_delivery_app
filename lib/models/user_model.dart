@@ -15,6 +15,7 @@ class UserModel {
   final List<String> favoriteMealIds;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? joinDate; // Alias for createdAt
   final Map<String, bool> notificationPreferences;
   final double? rating; // User's average rating (0.0 to 5.0)
   final List<dynamic>? coupons; // List of coupon IDs or coupon objects
@@ -41,6 +42,7 @@ class UserModel {
     this.profileImageUrl = '',
     this.createdAt,
     this.updatedAt,
+    this.joinDate,
     Map<String, bool>? notificationPreferences,
   }) : addresses = addresses ?? [],
        paymentMethods = paymentMethods ?? [],

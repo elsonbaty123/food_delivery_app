@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/meal.dart';
 
 class MealProvider with ChangeNotifier {
+  List<String> _favoriteMealIds = [];
   final List<Meal> _meals = [
     // Sample meals - in a real app, this would come from an API
     Meal(
@@ -64,6 +65,21 @@ class MealProvider with ChangeNotifier {
 
   List<Meal> get recommendedMeals =>
       _meals.where((meal) => meal.isRecommended).toList();
+
+  List<Meal> get favoriteMeals => _meals.where((meal) => _favoriteMealIds.contains(meal.id)).toList();
+
+  void toggleFavoriteStatus(String mealId) {
+    if (_favoriteMealIds.contains(mealId)) {
+      _favoriteMealIds.remove(mealId);
+    } else {
+      _favoriteMealIds.add(mealId);
+    }
+    notifyListeners();
+  }
+
+  bool isFavorite(String mealId) {
+    return _favoriteMealIds.contains(mealId);
+  }
 
   List<Meal> getMealsByCategory(String categoryId) {
     return _meals

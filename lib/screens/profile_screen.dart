@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
+import '../providers/locale_provider.dart';
+import '../models/user_model.dart';
 import 'notification_settings_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/section_header.dart';
@@ -16,6 +19,86 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading = false;
+
+  Future<void> _toggleTheme() async {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    themeProvider.toggleTheme();
+    
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(themeProvider.isDarkMode ? 'تم التبديل إلى الوضع الليلي' : 'تم التبديل إلى الوضع النهاري'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _changeLanguage() async {
+    final scaffoldContext = context; // Capture the context before async gap
+    
+    final selectedLanguage = await showDialog<String>(
+      context: scaffoldContext,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تغيير اللغة'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('العربية'),
+              onTap: () => Navigator.pop(ctx, 'ar'),
+            ),
+            ListTile(
+              title: const Text('English'),
+              onTap: () => Navigator.pop(ctx, 'en'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (selectedLanguage != null && scaffoldContext.mounted) {
+      // Get the current locale provider and update the language
+      final localeProvider = Provider.of<LocaleProvider>(scaffoldContext, listen: false);
+      final locale = Locale(selectedLanguage);
+      localeProvider.setLocale(locale);
+      
+      if (scaffoldContext.mounted) {
+        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+          SnackBar(
+            content: Text('تم تغيير اللغة إلى ${selectedLanguage == 'ar' ? 'العربية' : 'English'}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showLogoutDialog() async {
+    final scaffoldContext = context; // Capture the context before async gap
+    
+    final shouldLogout = await showDialog<bool>(
+      context: scaffoldContext,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تأكيد تسجيل الخروج'),
+        content: const Text('هل أنت متأكد أنك تريد تسجيل الخروج؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('تسجيل خروج'),
+          ),
+        ],
+      ),
+    ) ?? false;
+
+    if (shouldLogout && scaffoldContext.mounted) {
+      await Provider.of<AuthProvider>(scaffoldContext, listen: false).logout();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -147,9 +230,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const Icon(Icons.arrow_forward_ios, size: 16),
               ],
             ),
-            onTap: () {
-              // TODO: Implement language change
-            },
+            onTap: _changeLanguage,
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
           
@@ -168,9 +249,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const Icon(Icons.arrow_forward_ios, size: 16),
               ],
             ),
-            onTap: () {
-              // TODO: Implement theme change
-            },
+            onTap: _toggleTheme,
           ),
         ],
       ),
@@ -181,53 +260,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       BuildContext context, AuthProvider authProvider) {
     return Center(
       child: TextButton.icon(
-        onPressed: () async {
-          final shouldLogout = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('تسجيل الخروج'),
-              content: const Text('هل أنت متأكد من رغبتك في تسجيل الخروج؟'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text('إلغاء'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text('تسجيل خروج'),
-                ),
-              ],
-            ),
-          );
-
-          if (shouldLogout == true) {
-            setState(() {
-              _isLoading = true;
-            });
-
-            try {
-              await authProvider.logout();
-              if (mounted) {
-                Navigator.of(context).pushReplacementNamed('/');
-              }
-            } catch (e) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('حدث خطأ أثناء تسجيل الخروج'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            } finally {
-              if (mounted) {
-                setState(() {
-                  _isLoading = false;
-                });
-              }
-            }
-          }
-        },
+        onPressed: _showLogoutDialog,
         icon: const Icon(Icons.logout, color: Colors.red),
         label: Text(
           'تسجيل الخروج',

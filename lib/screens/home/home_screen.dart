@@ -11,6 +11,8 @@ import '../meal_details/meal_details_screen.dart';
 import '../search/search_screen.dart';
 
 class HomeScreen extends StatelessWidget {
+  static const routeName = '/';
+  
   const HomeScreen({super.key});
 
   @override

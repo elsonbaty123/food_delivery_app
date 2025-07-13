@@ -5,6 +5,8 @@ import '../../models/user_model.dart';
 import '../../models/address_type.dart';
 
 class ProfileScreen extends StatelessWidget {
+  static const routeName = '/profile';
+  
   const ProfileScreen({super.key});
 
   @override
