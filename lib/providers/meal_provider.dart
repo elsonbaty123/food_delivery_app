@@ -1,5 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
 import '../models/meal.dart';
+import '../models/user_model.dart';
+import 'auth_provider.dart';
 
 class MealProvider with ChangeNotifier {
   List<String> _favoriteMealIds = [];
@@ -58,6 +62,10 @@ class MealProvider with ChangeNotifier {
     // Add more sample meals as needed
   ];
 
+  final BuildContext context;
+
+  MealProvider(this.context);
+
   List<Meal> get meals => List.unmodifiable(_meals);
 
   List<Meal> get popularMeals =>
@@ -67,6 +75,8 @@ class MealProvider with ChangeNotifier {
       _meals.where((meal) => meal.isRecommended).toList();
 
   List<Meal> get favoriteMeals => _meals.where((meal) => _favoriteMealIds.contains(meal.id)).toList();
+
+  List<Meal> get chefMeals => _meals.where((meal) => meal.chefId == currentUser?.id).toList();
 
   void toggleFavoriteStatus(String mealId) {
     if (_favoriteMealIds.contains(mealId)) {
@@ -108,11 +118,34 @@ class MealProvider with ChangeNotifier {
     }).toList();
   }
 
+  Future<void> addMeal(Meal meal) async {
+    _meals.add(meal);
+    notifyListeners();
+  }
+
+  Future<void> updateMeal(Meal meal) async {
+    final index = _meals.indexWhere((m) => m.id == meal.id);
+    if (index >= 0) {
+      _meals[index] = meal;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteMeal(String mealId) async {
+    _meals.removeWhere((meal) => meal.id == mealId);
+    notifyListeners();
+  }
+
   // In a real app, you would have methods to fetch meals from an API
   Future<void> fetchMeals() async {
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
     // In a real app, you would fetch data from an API here
     notifyListeners();
+  }
+
+  UserModel? get currentUser {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    return authProvider.currentUser;
   }
 }

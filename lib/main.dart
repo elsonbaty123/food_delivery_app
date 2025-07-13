@@ -18,6 +18,8 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/location/location_search_screen.dart';
+import 'screens/chef/manage_meals_screen.dart';
+import 'screens/chef/edit_meal_screen.dart';
 
 // Constants
 import 'constants/app_constants.dart';
@@ -35,19 +37,14 @@ import 'providers/locale_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const FoodDeliveryApp());
-}
-
-class FoodDeliveryApp extends StatelessWidget {
-  const FoodDeliveryApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MultiProvider(
+  runApp(
+    MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..init()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
-        ChangeNotifierProvider(create: (_) => MealProvider()),
+        ChangeNotifierProvider(
+          create: (context) => MealProvider(context),
+        ),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => OrdersProvider()),
         ChangeNotifierProvider(create: (_) => AddressesProvider()),
@@ -55,59 +52,69 @@ class FoodDeliveryApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
       ],
-      child: Consumer<AuthProvider>(
-        builder: (context, authProvider, _) {
-          return MaterialApp(
-            title: 'مطبخ البيت',
-            debugShowCheckedModeBanner: false,
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [
-              Locale('ar', 'SA'), // Arabic
-            ],
-            locale: const Locale('ar', 'SA'),
-            themeMode: ThemeMode.light,
-            theme: AppTheme.lightTheme.copyWith(
-              textTheme: Theme.of(context).textTheme.apply(
-                    fontFamily: 'Cairo',
-                    bodyColor: AppColors.textPrimary,
-                    displayColor: AppColors.textPrimary,
-                  ),
-            ),
-            initialRoute: authProvider.isAuthenticated ? '/' : LoginScreen.routeName,
-            routes: {
-              // Auth Routes
-              LoginScreen.routeName: (ctx) => const LoginScreen(),
-                                      SignUpScreen.routeName: (ctx) => const SignUpScreen(),
-              ForgotPasswordScreen.routeName: (ctx) => const ForgotPasswordScreen(),
-              
-              // Main App Routes
-              '/': (ctx) => authProvider.isAuthenticated 
-                  ? const HomePage() 
-                  : const LoginScreen(),
-                  
-              // Feature Screens
-              CategoriesScreen.routeName: (ctx) => const CategoriesScreen(),
-              CartScreen.routeName: (ctx) => const CartScreen(),
-              SearchScreen.routeName: (ctx) => const SearchScreen(),
-              LocationSearchScreen.routeName: (ctx) => const LocationSearchScreen(),
-              ProfileScreen.routeName: (ctx) => const ProfileScreen(),
-              OrdersScreen.routeName: (ctx) => const OrdersScreen(),
-              AddressesScreen.routeName: (ctx) => const AddressesScreen(),
-              AddEditAddressScreen.routeName: (ctx) => const AddEditAddressScreen(),
-              FavoritesScreen.routeName: (ctx) => const FavoritesScreen(),
-              MealDetailsScreen.routeName: (ctx) {
-                final args = ModalRoute.of(ctx)!.settings.arguments;
-                return MealDetailsScreen(mealId: args as String);
-              },
-            },
+      child: const FoodDeliveryApp(),
+    ),
+  );
+}
 
-          );
-        },
-      ),
+class FoodDeliveryApp extends StatelessWidget {
+  const FoodDeliveryApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        return MaterialApp(
+          title: 'مطبخ البيت',
+          debugShowCheckedModeBanner: false,
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('ar', 'SA'), // Arabic
+          ],
+          locale: const Locale('ar', 'SA'),
+          themeMode: ThemeMode.light,
+          theme: AppTheme.lightTheme.copyWith(
+            textTheme: Theme.of(context).textTheme.apply(
+                  fontFamily: 'Cairo',
+                  bodyColor: AppColors.textPrimary,
+                  displayColor: AppColors.textPrimary,
+                ),
+          ),
+          initialRoute: '/',
+          routes: {
+            // Auth Routes
+            LoginScreen.routeName: (ctx) => const LoginScreen(),
+            SignUpScreen.routeName: (ctx) => const SignUpScreen(),
+            ForgotPasswordScreen.routeName: (ctx) => const ForgotPasswordScreen(),
+            
+            // Main App Routes
+            '/': (ctx) => const HomeScreen(),
+                
+            // Chef Routes
+            ManageMealsScreen.routeName: (ctx) => const ManageMealsScreen(),
+            EditMealScreen.routeName: (ctx) => const EditMealScreen(),
+            // Feature Screens
+            CategoriesScreen.routeName: (ctx) => const CategoriesScreen(),
+            CartScreen.routeName: (ctx) => const CartScreen(),
+            SearchScreen.routeName: (ctx) => const SearchScreen(),
+            LocationSearchScreen.routeName: (ctx) => const LocationSearchScreen(),
+            ProfileScreen.routeName: (ctx) => const ProfileScreen(),
+            OrdersScreen.routeName: (ctx) => const OrdersScreen(),
+            AddressesScreen.routeName: (ctx) => const AddressesScreen(),
+            AddEditAddressScreen.routeName: (ctx) => const AddEditAddressScreen(),
+            FavoritesScreen.routeName: (ctx) => const FavoritesScreen(),
+            MealDetailsScreen.routeName: (ctx) {
+              final args = ModalRoute.of(ctx)!.settings.arguments;
+              return MealDetailsScreen(mealId: args as String);
+            },
+          },
+
+        );
+      },
     );
   }
 }

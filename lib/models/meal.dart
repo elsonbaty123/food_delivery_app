@@ -15,12 +15,14 @@ class Meal {
   final Affordability affordability;
   final List<String> ingredients;
   final Map<String, int> nutrition; // e.g., {'calories': 500, 'protein': 25, ...}
+  final String? chefId;
 
   Meal({
     required this.id,
     required this.name,
     required this.description,
     required this.price,
+    this.chefId,
     this.rating = 0.0,
     required this.imageUrl,
     required this.categories,
@@ -29,16 +31,9 @@ class Meal {
     this.preparationTime = 30,
     this.complexity = Complexity.Simple,
     this.affordability = Affordability.Affordable,
-    List<String>? ingredients,
-    Map<String, int>? nutrition,
-  })  : ingredients = ingredients ?? [],
-        nutrition = nutrition ??
-            {
-              'calories': 0,
-              'protein': 0,
-              'carbs': 0,
-              'fat': 0,
-            };
+    required this.ingredients,
+    required this.nutrition,
+  });
 
   // Convert a Meal to a Map
   Map<String, dynamic> toMap() {
@@ -57,6 +52,7 @@ class Meal {
       'affordability': affordability.index,
       'ingredients': ingredients,
       'nutrition': nutrition,
+      'chefId': chefId,
     };
   }
 
@@ -77,6 +73,7 @@ class Meal {
       affordability: Affordability.values[map['affordability'] ?? 0],
       ingredients: List<String>.from(map['ingredients'] ?? []),
       nutrition: Map<String, int>.from(map['nutrition'] ?? {}),
+      chefId: map['chefId'],
     );
   }
 
@@ -96,6 +93,7 @@ class Meal {
     Affordability? affordability,
     List<String>? ingredients,
     Map<String, int>? nutrition,
+    String? chefId,
   }) {
     return Meal(
       id: id ?? this.id,
@@ -112,6 +110,7 @@ class Meal {
       affordability: affordability ?? this.affordability,
       ingredients: ingredients ?? this.ingredients,
       nutrition: nutrition ?? this.nutrition,
+      chefId: chefId ?? this.chefId,
     );
   }
 }
