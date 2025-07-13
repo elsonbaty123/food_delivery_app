@@ -112,6 +112,11 @@ class CouponManagementScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
+            const SizedBox(height: 4),
+            Text(
+              'الاستخدام: ${coupon.usedCount} / ${coupon.maxUses ?? 'غير محدود'}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,

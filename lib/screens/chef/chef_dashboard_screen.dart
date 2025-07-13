@@ -21,11 +21,24 @@ class ChefDashboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('لوحة تحكم الطاهي'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-            Navigator.of(context).pushNamed('/profile');
-          },
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'main_menu') {
+                Navigator.of(context).pushReplacementNamed('/');
+              } else if (value == 'profile') {
+                Navigator.of(context).pushNamed('/profile');
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'main_menu',
+                child: Text('القائمة الرئيسية'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'profile',
+                child: Text('الملف الشخصي'),
+              ),
+            ],
           ),
         ],
       ),

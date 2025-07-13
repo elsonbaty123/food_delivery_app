@@ -80,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     return Consumer<MealProvider>(
       builder: (context, mealProvider, _) {
-        final popularMeals = mealProvider.popularMeals;
+        final allMeals = mealProvider.meals;
         final categories = categoryProvider.getPopularCategories();
         
         return Scaffold(
@@ -183,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   _buildSearchBar(context),
                   _buildCategoriesSection(categories, context),
-                  _buildPopularMealsSection(popularMeals, context, cartProvider),
+                  _buildPopularMealsSection(allMeals, context, cartProvider),
                 ],
               ),
             ),

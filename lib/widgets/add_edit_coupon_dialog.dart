@@ -19,6 +19,7 @@ class _AddEditCouponDialogState extends State<AddEditCouponDialog> {
   late double _discountValue;
   late bool _isPercentage;
   late DateTime _expiryDate;
+  int? _maxUses;
   final List<String> _selectedMealIds = [];
 
   @override
@@ -29,12 +30,14 @@ class _AddEditCouponDialogState extends State<AddEditCouponDialog> {
       _discountValue = widget.coupon!.discountValue;
       _isPercentage = widget.coupon!.isPercentage;
       _expiryDate = widget.coupon!.expiryDate;
+      _maxUses = widget.coupon!.maxUses;
       _selectedMealIds.addAll(widget.coupon!.eligibleMealIds);
     } else {
       _code = '';
       _discountValue = 10;
       _isPercentage = true;
       _expiryDate = DateTime.now().add(const Duration(days: 30));
+      _maxUses = null;
     }
   }
 
@@ -128,6 +131,22 @@ class _AddEditCouponDialogState extends State<AddEditCouponDialog> {
                     ],
                   ),
                 ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                initialValue: _maxUses?.toString() ?? '',
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'الحد الأقصى للاستخدام (فارغ لعدد غير محدود)',
+                  border: OutlineInputBorder(),
+                ),
+                onSaved: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    _maxUses = null;
+                  } else {
+                    _maxUses = int.tryParse(value);
+                  }
+                },
               ),
               const SizedBox(height: 16),
               InkWell(
@@ -225,6 +244,7 @@ class _AddEditCouponDialogState extends State<AddEditCouponDialog> {
         isPercentage: _isPercentage,
         expiryDate: _expiryDate,
         eligibleMealIds: _selectedMealIds,
+        maxUses: _maxUses,
         createdAt: widget.coupon?.createdAt ?? DateTime.now(),
       );
       
