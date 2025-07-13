@@ -6,10 +6,10 @@ import '../../utils/validators.dart';
 class ForgotPasswordScreen extends StatefulWidget {
   static const routeName = '/forgot-password';
 
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
+  const ForgotPasswordScreen({super.key});
 
   @override
-  _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
@@ -25,21 +25,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _resetPassword() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isLoading = true);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
-      
+
       // In a real app, this would call your authentication service
       // await authProvider.resetPassword(_emailController.text.trim());
-      
+
       setState(() => _emailSent = true);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (scaffoldMessenger.mounted) {
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text('حدث خطأ: ${e.toString()}'),
             backgroundColor: Colors.red,
@@ -79,7 +80,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   color: theme.primaryColor,
                 ),
                 const SizedBox(height: 24),
-                
                 if (!_emailSent) ...[
                   // Instructions
                   Text(
@@ -116,15 +116,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   PrimaryButton(
                     onPressed: _isLoading ? null : _resetPassword,
                     child: _isLoading
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
                         : const Text('إرسال رابط إعادة التعيين'),
                   ),
                 ] else ...[
                   // Success Message
-                  Icon(
+                  const Icon(
                     Icons.check_circle_outline_rounded,
                     size: 80,
                     color: Colors.green,
@@ -151,9 +155,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     child: const Text('العودة لتسجيل الدخول'),
                   ),
                 ],
-                
                 const SizedBox(height: 24),
-                
+
                 // Back to Login
                 TextButton(
                   onPressed: () {

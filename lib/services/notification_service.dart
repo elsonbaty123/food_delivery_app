@@ -34,12 +34,11 @@ class NotificationService {
     final status = await Permission.notification.request();
     
     if (status.isGranted) {
-      print('تم منح إذن الإشعارات');
+      // Permission granted
     } else if (status.isDenied) {
-      print('تم رفض إذن الإشعارات');
+      // Permission denied
     } else if (status.isPermanentlyDenied) {
-      print('تم رفض إذن الإشعارات بشكل دائم');
-      // يمكنك فتح إعدادات التطبيق لتمكين الإشعارات
+      // Permission permanently denied, navigate to app settings
       // await openAppSettings();
     }
   }
@@ -145,8 +144,8 @@ class NotificationService {
   void _onNotificationTap(String? payload) {
     // يمكنك إضافة منطق التنقل عند النقر على الإشعار
     if (payload != null) {
-      // مثال: Navigator.pushNamed(context, payload);
-      print('تم النقر على إشعار مع البيانات: $payload');
+      // TODO: Handle notification tap, e.g., navigate to a specific screen
+      // Example: Navigator.pushNamed(context, payload);
     }
   }
 

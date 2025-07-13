@@ -8,10 +8,10 @@ import '../widgets/section_header.dart';
 class NotificationSettingsScreen extends StatefulWidget {
   static const routeName = '/notification-settings';
 
-  const NotificationSettingsScreen({Key? key}) : super(key: key);
+  const NotificationSettingsScreen({super.key});
 
   @override
-  _NotificationSettingsScreenState createState() =>
+  State<NotificationSettingsScreen> createState() =>
       _NotificationSettingsScreenState();
 }
 
@@ -58,6 +58,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   }
 
   Future<void> _updateNotificationSetting(String key, bool value) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final originalValue = _notificationSettings[key];
+
     try {
       setState(() {
         _notificationSettings[key] = value;
@@ -65,31 +68,27 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
 
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.updateNotificationPreference(key, value);
-      
-      // If this is the main notifications toggle, update system settings
+
       if (key == 'order_updates') {
         await _notificationService.toggleNotifications(value);
       }
-      
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم تحديث الإعدادات بنجاح'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
+
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(
+          content: Text('تم تحديث الإعدادات بنجاح'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     } catch (e) {
       debugPrint('خطأ في تحديث إعدادات الإشعارات: $e');
-      
-      // Revert UI on error
+
       if (mounted) {
         setState(() {
-          _notificationSettings[key] = !value;
+          _notificationSettings[key] = originalValue!;
         });
-        
-        ScaffoldMessenger.of(context).showSnackBar(
+
+        scaffoldMessenger.showSnackBar(
           const SnackBar(
             content: Text('حدث خطأ أثناء تحديث الإعدادات'),
             backgroundColor: Colors.red,
@@ -102,8 +101,6 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
     return Scaffold(
       appBar: AppBar(
         title: const Text('إعدادات الإشعارات'),
@@ -190,6 +187,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     return Center(
       child: ElevatedButton.icon(
         onPressed: () async {
+          final scaffoldMessenger = ScaffoldMessenger.of(context);
           try {
             await _notificationService.showSimpleNotification(
               title: 'اختبار الإشعارات',
@@ -197,14 +195,13 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               payload: 'test_notification',
             );
           } catch (e) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('خطأ في إرسال الإشعار: $e'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
+            if (!mounted) return;
+            scaffoldMessenger.showSnackBar(
+              SnackBar(
+                content: Text('خطأ في إرسال الإشعار: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
           }
         },
         icon: const Icon(Icons.notifications_active_outlined),

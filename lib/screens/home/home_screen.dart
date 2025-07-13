@@ -13,11 +13,36 @@ import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
 import '../auth/login_screen.dart';
 import '../profile/profile_screen.dart';
+import '../chef/chef_dashboard_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   static const routeName = '/';
-  
+
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  Future<void> _navigateToLocationSearch() async {
+    // No context is passed, using the State's context directly.
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    final selectedLocation = await navigator.pushNamed(
+      LocationSearchScreen.routeName,
+    );
+
+    if (selectedLocation != null && mounted) {
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(
+          content: Text('تم تحديث الموقع بنجاح'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,13 +52,20 @@ class HomeScreen extends StatelessWidget {
     return Consumer3<MealProvider, CategoryProvider, CartProvider>(
       builder: (context, mealProvider, categoryProvider, cartProvider, _) {
         if (userType == UserType.chef) {
-          return _buildChefHomeScreen(context, mealProvider);
+          // Use a post-frame callback to avoid calling pushNamed during build.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              Navigator.pushReplacementNamed(context, ChefDashboardScreen.routeName);
+            }
+          });
+          // Return a placeholder while navigating.
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
         } else {
           return _buildCustomerHomeScreen(
-            context, 
-            mealProvider, 
-            categoryProvider, 
-            cartProvider
+            context,
+            mealProvider,
+            categoryProvider,
+            cartProvider,
           );
         }
       },
@@ -44,215 +76,152 @@ class HomeScreen extends StatelessWidget {
     BuildContext context,
     MealProvider mealProvider,
     CategoryProvider categoryProvider,
-    CartProvider cartProvider
+    CartProvider cartProvider,
   ) {
-    final popularMeals = mealProvider.popularMeals;
-    final categories = categoryProvider.getPopularCategories();
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: Consumer<LocationProvider>(
-          builder: (context, locationProvider, _) {
-            return GestureDetector(
-              onTap: () async {
-                final selectedLocation = await Navigator.pushNamed(
-                  context, 
-                  LocationSearchScreen.routeName,
-                );
-                if (selectedLocation != null && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('تم تحديث الموقع بنجاح'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                }
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'التوصيل إلى',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  Row(
+    return Consumer<MealProvider>(
+      builder: (context, mealProvider, _) {
+        final popularMeals = mealProvider.popularMeals;
+        final categories = categoryProvider.getPopularCategories();
+        
+        return Scaffold(
+          appBar: AppBar(
+            title: Consumer<LocationProvider>(
+              builder: (context, locationProvider, _) {
+                return GestureDetector(
+                  onTap: _navigateToLocationSearch,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        locationProvider.currentLocation?.name ?? 'تحديد الموقع',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                      const Text(
+                        'التوصيل إلى',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 20,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            locationProvider.currentLocation?.name ?? 'تحديد الموقع',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.keyboard_arrow_down,
+                            size: 20,
+                          ),
+                        ],
                       ),
                     ],
                   ),
+                );
+              },
+            ),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  Navigator.pushNamed(context, SearchScreen.routeName);
+                },
+              ),
+              Consumer<CartProvider>(
+                builder: (context, cart, _) {
+                  return Stack(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.shopping_cart_outlined),
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/cart');
+                        },
+                      ),
+                      if (cart.itemCount > 0)
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              cart.itemCount.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+          body: RefreshIndicator(
+            onRefresh: () async {
+              final mealProvider = Provider.of<MealProvider>(context, listen: false);
+              final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
+              await mealProvider.fetchMeals();
+              await categoryProvider.fetchCategories();
+            },
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSearchBar(context),
+                  _buildCategoriesSection(categories, context),
+                  _buildPopularMealsSection(popularMeals, context, cartProvider),
                 ],
               ),
-            );
-          },
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              Navigator.pushNamed(context, SearchScreen.routeName);
-            },
+            ),
           ),
-          Consumer<CartProvider>(
-            builder: (context, cart, _) {
-              return Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.shopping_cart_outlined),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/cart');
-                    },
+          bottomNavigationBar: Consumer<AuthProvider>(
+            builder: (context, authProvider, _) {
+              return BottomNavigationBar(
+                items: [
+                  const BottomNavigationBarItem(
+                    icon: Icon(Icons.home),
+                    label: 'الرئيسية',
                   ),
-                  if (cart.itemCount > 0)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Text(
-                          cart.itemCount.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
+                  const BottomNavigationBarItem(
+                    icon: Icon(Icons.search),
+                    label: 'بحث',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: authProvider.isAuthenticated
+                      ? const Icon(Icons.person)
+                      : const Icon(Icons.login),
+                    label: authProvider.isAuthenticated ? 'حسابي' : 'تسجيل الدخول',
+                  ),
                 ],
+                currentIndex: 0,
+                onTap: (index) {
+                  if (index == 2) {
+                    if (authProvider.isAuthenticated) {
+                      Navigator.pushNamed(context, ProfileScreen.routeName);
+                    } else {
+                      Navigator.pushNamed(context, LoginScreen.routeName);
+                    }
+                  }
+                },
               );
             },
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildSearchBar(context),
-            _buildCategoriesSection(categories, context),
-            _buildPopularMealsSection(popularMeals, context, cartProvider),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Consumer<AuthProvider>(
-        builder: (context, authProvider, _) {
-          return BottomNavigationBar(
-            items: [
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.home),
-                label: 'الرئيسية',
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.search),
-                label: 'بحث',
-              ),
-              BottomNavigationBarItem(
-                icon: authProvider.isAuthenticated
-                  ? const Icon(Icons.person)
-                  : const Icon(Icons.login),
-                label: authProvider.isAuthenticated ? 'حسابي' : 'تسجيل الدخول',
-              ),
-            ],
-            currentIndex: 0,
-            onTap: (index) {
-              if (index == 2) {
-                if (authProvider.isAuthenticated) {
-                  Navigator.pushNamed(context, ProfileScreen.routeName);
-                } else {
-                  Navigator.pushNamed(context, LoginScreen.routeName);
-                }
-              }
-            },
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildChefHomeScreen(
-    BuildContext context,
-    MealProvider mealProvider,
-  ) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('لوحة التحكم'),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'مرحباً أيها الطاهي',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/manage-meals');
-              },
-              child: const Text('إدارة الوجبات'),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/orders');
-              },
-              child: const Text('عرض الطلبات'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'مرحباً بك',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            const Icon(Icons.location_on_outlined, size: 20),
-            const SizedBox(width: 4),
-            Text(
-              'موقع التوصيل',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const Icon(Icons.keyboard_arrow_down, size: 20),
-          ],
-        ),
-      ],
+        );
+      },
     );
   }
 

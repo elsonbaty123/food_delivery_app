@@ -11,32 +11,31 @@ import '../widgets/section_header.dart';
 class ProfileScreen extends StatefulWidget {
   static const routeName = '/profile';
 
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
-  _ProfileScreenState createState() => _ProfileScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  bool _isLoading = false;
-
   Future<void> _toggleTheme() async {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     themeProvider.toggleTheme();
-    
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(themeProvider.isDarkMode ? 'تم التبديل إلى الوضع الليلي' : 'تم التبديل إلى الوضع النهاري'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
+
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text(themeProvider.isDarkMode
+            ? 'تم التبديل إلى الوضع الليلي'
+            : 'تم التبديل إلى الوضع النهاري'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> _changeLanguage() async {
     final scaffoldContext = context; // Capture the context before async gap
-    
+
     final selectedLanguage = await showDialog<String>(
       context: scaffoldContext,
       builder: (ctx) => AlertDialog(
@@ -58,42 +57,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (selectedLanguage != null && scaffoldContext.mounted) {
-      // Get the current locale provider and update the language
-      final localeProvider = Provider.of<LocaleProvider>(scaffoldContext, listen: false);
+      final localeProvider =
+          Provider.of<LocaleProvider>(scaffoldContext, listen: false);
       final locale = Locale(selectedLanguage);
       localeProvider.setLocale(locale);
-      
-      if (scaffoldContext.mounted) {
-        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-          SnackBar(
-            content: Text('تم تغيير اللغة إلى ${selectedLanguage == 'ar' ? 'العربية' : 'English'}'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
+
+      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+        SnackBar(
+          content: Text(
+              'تم تغيير اللغة إلى ${selectedLanguage == 'ar' ? 'العربية' : 'English'}'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
   Future<void> _showLogoutDialog() async {
     final scaffoldContext = context; // Capture the context before async gap
-    
+
     final shouldLogout = await showDialog<bool>(
-      context: scaffoldContext,
-      builder: (ctx) => AlertDialog(
-        title: const Text('تأكيد تسجيل الخروج'),
-        content: const Text('هل أنت متأكد أنك تريد تسجيل الخروج؟'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('إلغاء'),
+          context: scaffoldContext,
+          builder: (ctx) => AlertDialog(
+            title: const Text('تأكيد تسجيل الخروج'),
+            content: const Text('هل أنت متأكد أنك تريد تسجيل الخروج؟'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('إلغاء'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('تسجيل خروج'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('تسجيل خروج'),
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
 
     if (shouldLogout && scaffoldContext.mounted) {
       await Provider.of<AuthProvider>(scaffoldContext, listen: false).logout();
@@ -104,7 +103,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.currentUser;
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -112,80 +110,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
         centerTitle: true,
       ),
       drawer: const AppDrawer(),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // User Info Section
-                  _buildUserInfoSection(context, user, theme),
-                  const SizedBox(height: 24),
-                  
-                  // Settings Section
-                  const SectionHeader(
-                    title: 'الإعدادات',
-                    subtitle: 'إدارة إعدادات حسابك',
-                  ),
-                  _buildSettingsList(context, theme),
-                  const SizedBox(height: 24),
-                  
-                  // Logout Button
-                  _buildLogoutButton(context, authProvider),
-                ],
-              ),
-            ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // User Info Section
+            const SectionHeader(title: 'المعلومات الشخصية'),
+            const SizedBox(height: 16),
+            _buildUserInfoSection(context, user),
+            const SizedBox(height: 24),
+
+            // Settings Section
+            const SectionHeader(title: 'الإعدادات'),
+            const SizedBox(height: 16),
+            _buildSettingsList(context),
+            const SizedBox(height: 24),
+
+            // Logout Button
+            _buildLogoutButton(context, authProvider),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildUserInfoSection(
-      BuildContext context, UserModel? user, ThemeData theme) {
+  Widget _buildUserInfoSection(BuildContext context, UserModel? user) {
+    if (user == null) {
+      return const Card(
+        elevation: 2,
+        child: Padding(
+          padding: EdgeInsets.all(24.0),
+          child: Center(
+            child: Text('لا يمكن تحميل بيانات المستخدم.'),
+          ),
+        ),
+      );
+    }
+
+    final theme = Theme.of(context);
     return Card(
-      elevation: 4,
+      elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            // User Avatar
             CircleAvatar(
               radius: 50,
-              backgroundImage: user?.profileImageUrl != null
-                  ? NetworkImage(user!.profileImageUrl!)
+              backgroundImage: user.profileImageUrl.isNotEmpty
+                  ? NetworkImage(user.profileImageUrl)
                   : const AssetImage('assets/images/default_avatar.png')
                       as ImageProvider,
             ),
             const SizedBox(height: 16),
-            
-            // User Name
             Text(
-              user?.name ?? 'زائر',
+              user.name,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
             ),
-            
-            // User Email
-            if (user?.email != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                user!.email!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.textTheme.bodySmall?.color,
-                ),
-                textAlign: TextAlign.center,
+            const SizedBox(height: 8),
+            Text(
+              user.email,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.textTheme.bodySmall?.color,
               ),
-            ],
-            
-            // Join Date
-            if (user?.joinDate != null) ...[
+              textAlign: TextAlign.center,
+            ),
+            if (user.joinDate != null) ...[
               const SizedBox(height: 8),
               Text(
-                'منضم منذ ${_formatJoinDate(user!.joinDate!)}',
+                'منضم منذ ${_formatJoinDate(user.joinDate!)}',
                 style: theme.textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),
@@ -196,7 +195,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSettingsList(BuildContext context, ThemeData theme) {
+  Widget _buildSettingsList(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
+    final theme = Theme.of(context);
+
+    final currentLanguage = localeProvider.locale.languageCode == 'ar' ? 'العربية' : 'English';
+    final currentTheme = themeProvider.isDarkMode ? 'ليلي' : 'فاتح';
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -214,7 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             },
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
-          
+
           // Language Settings
           ListTile(
             leading: const Icon(Icons.language_outlined),
@@ -223,7 +229,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'العربية',
+                  currentLanguage,
                   style: theme.textTheme.bodySmall,
                 ),
                 const SizedBox(width: 8),
@@ -233,7 +239,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onTap: _changeLanguage,
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
-          
+
           // Theme Settings
           ListTile(
             leading: const Icon(Icons.brightness_6_outlined),
@@ -242,7 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'فاتح',
+                  currentTheme,
                   style: theme.textTheme.bodySmall,
                 ),
                 const SizedBox(width: 8),
@@ -256,8 +262,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildLogoutButton(
-      BuildContext context, AuthProvider authProvider) {
+  Widget _buildLogoutButton(BuildContext context, AuthProvider authProvider) {
     return Center(
       child: TextButton.icon(
         onPressed: _showLogoutDialog,

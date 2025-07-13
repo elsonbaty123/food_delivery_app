@@ -16,7 +16,7 @@ class PrimaryButton extends StatelessWidget {
   final bool isOutlined;
 
   const PrimaryButton({
-    Key? key,
+    super.key,
     required this.onPressed,
     required this.child,
     this.fullWidth = true,
@@ -30,46 +30,46 @@ class PrimaryButton extends StatelessWidget {
     this.elevation,
     this.side,
     this.isOutlined = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final buttonStyle = ButtonStyle(
-      backgroundColor: MaterialStateProperty.resolveWith<Color>(
-        (Set<MaterialState> states) {
-          if (states.contains(MaterialState.disabled)) {
+      backgroundColor: WidgetStateProperty.resolveWith<Color>(
+        (Set<WidgetState> states) {
+          if (states.contains(WidgetState.disabled)) {
             return isOutlined
                 ? Colors.transparent
-                : theme.colorScheme.primary.withOpacity(0.5);
+                : theme.colorScheme.primary.withAlpha(128); // 0.5 opacity
           }
           return isOutlined
               ? Colors.transparent
               : backgroundColor ?? theme.colorScheme.primary;
         },
       ),
-      foregroundColor: MaterialStateProperty.resolveWith<Color>(
-        (Set<MaterialState> states) {
-          if (states.contains(MaterialState.disabled)) {
-            return theme.colorScheme.onSurface.withOpacity(0.38);
+      foregroundColor: WidgetStateProperty.resolveWith<Color>(
+        (Set<WidgetState> states) {
+          if (states.contains(WidgetState.disabled)) {
+            return theme.colorScheme.onSurface.withAlpha(97); // 0.38 opacity
           }
           return isOutlined
               ? (textColor ?? theme.colorScheme.primary)
               : textColor ?? theme.colorScheme.onPrimary;
         },
       ),
-      overlayColor: MaterialStateProperty.resolveWith<Color>(
-        (Set<MaterialState> states) {
-          if (states.contains(MaterialState.pressed)) {
+      overlayColor: WidgetStateProperty.resolveWith<Color>(
+        (Set<WidgetState> states) {
+          if (states.contains(WidgetState.pressed)) {
             return isOutlined
-                ? theme.colorScheme.primary.withOpacity(0.1)
-                : theme.colorScheme.primary.withOpacity(0.8);
+                ? theme.colorScheme.primary.withAlpha(26) // 0.1 opacity
+                : theme.colorScheme.primary.withAlpha(204); // 0.8 opacity
           }
           return Colors.transparent;
         },
       ),
-      elevation: MaterialStateProperty.all<double>(elevation ?? 0.0),
-      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+      elevation: WidgetStateProperty.all<double>(elevation ?? 0.0),
+      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
         RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadius),
           side: side ??
@@ -78,7 +78,7 @@ class PrimaryButton extends StatelessWidget {
                   : BorderSide.none),
         ),
       ),
-      padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+      padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
         padding ?? const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
       ),
     );
@@ -107,3 +107,4 @@ class PrimaryButton extends StatelessWidget {
     );
   }
 }
+

@@ -34,22 +34,22 @@ class CartScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.shopping_cart_outlined,
                     size: 80,
                     color: Colors.grey,
                   ),
-                  SizedBox(height: 16),
-                  Text(
+                  const SizedBox(height: 16),
+                  const Text(
                     'سلة التسوق فارغة',
                     style: TextStyle(fontSize: 18),
                   ),
-                  SizedBox(height: 8),
-                  Text(
+                  const SizedBox(height: 8),
+                  const Text(
                     'لم تقم بإضافة أي وجبات إلى السلة بعد',
                     style: TextStyle(color: Colors.grey),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
                       // Navigate to home screen
@@ -61,7 +61,7 @@ class CartScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    child: Text('تصفح الوجبات'),
+                    child: const Text('تصفح الوجبات'),
                   ),
                 ],
               ),
@@ -101,10 +101,13 @@ class CartScreen extends StatelessWidget {
       direction: DismissDirection.endToStart,
       background: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        padding: const EdgeInsets.only(left: 20),
+        padding: const EdgeInsets.only(right: 20),
         alignment: Alignment.centerRight,
-        color: Colors.red,
-        child: Icon(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Icon(
           Icons.delete,
           color: Colors.white,
           size: 30,
@@ -114,10 +117,16 @@ class CartScreen extends StatelessWidget {
         cartProvider.removeItem(cartItem.id);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('تمت إزالة العنصر من السلة'),
+            content: Text('تم حذف ${cartItem.meal.name} من السلة'),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
+            ),
+            action: SnackBarAction(
+              label: 'تراجع',
+              onPressed: () {
+                cartProvider.addItem(cartItem);
+              },
             ),
           ),
         );
@@ -127,84 +136,66 @@ class CartScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Image (using meal imageUrl if available)
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: cartItem.meal.imageUrl.isNotEmpty
-                    ? Image.network(
-                        cartItem.meal.imageUrl,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          width: 80,
-                          height: 80,
-                          color: Colors.grey[200],
-                          child: Icon(Icons.fastfood, size: 40, color: Colors.grey),
-                        ),
-                      )
-                    : Container(
-                        width: 80,
-                        height: 80,
-                        color: Colors.grey[200],
-                        child: Icon(Icons.fastfood, size: 40, color: Colors.grey),
-                      ),
+                child: Image.network(
+                  cartItem.meal.imageUrl,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: 80,
+                    height: 80,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.fastfood, size: 40, color: Colors.grey),
+                  ),
+                ),
               ),
-              SizedBox(width: 12),
-              // Details
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       cartItem.meal.name,
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    if (cartItem.specialInstructions != null && cartItem.specialInstructions!.isNotEmpty)
-                      Text(
-                        cartItem.specialInstructions!.join(', '),
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Text(
                       '${cartItem.meal.price.toStringAsFixed(2)} ر.س',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildQuantityButton(
+                          icon: Icons.remove,
+                          onPressed: () {
+                            if (cartItem.quantity > 1) {
+                              cartProvider.updateItemQuantity(cartItem.id, cartItem.quantity - 1);
+                            } else {
+                              cartProvider.removeItem(cartItem.id);
+                            }
+                          },
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            cartItem.quantity.toString(),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        _buildQuantityButton(
+                          icon: Icons.add,
+                          onPressed: () {
+                            cartProvider.updateItemQuantity(cartItem.id, cartItem.quantity + 1);
+                          },
+                        ),
+                      ],
+                    )
                   ],
                 ),
-              ),
-              // Quantity controls
-              Column(
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      cartProvider.updateItemQuantity(cartItem.id, cartItem.quantity + 1);
-                    },
-                    icon: Icon(Icons.add_circle_outline, size: 20),
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(),
-                  ),
-                  Text('${cartItem.quantity}'),
-                  IconButton(
-                    onPressed: () {
-                      if (cartItem.quantity > 1) {
-                        cartProvider.updateItemQuantity(cartItem.id, cartItem.quantity - 1);
-                      } else {
-                        cartProvider.removeItem(cartItem.id);
-                      }
-                    },
-                    icon: Icon(Icons.remove_circle_outline, size: 20),
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(),
-                  ),
-                ],
               ),
             ],
           ),
@@ -213,53 +204,69 @@ class CartScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildQuantityButton({required IconData icon, required VoidCallback onPressed}) {
+    return SizedBox(
+      width: 32,
+      height: 32,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          padding: EdgeInsets.zero,
+          shape: const CircleBorder(),
+          backgroundColor: Colors.grey[200],
+          foregroundColor: Colors.black87,
+        ),
+        child: Icon(icon, size: 18),
+      ),
+    );
+  }
+
   Widget _buildCheckoutSection(BuildContext context, CartProvider cartProvider, double subtotal, double deliveryFee, double total) {
-    return Padding(
+    return Container(
       padding: const EdgeInsets.all(16.0),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Color.fromRGBO(0, 0, 0, 0.1),
+            blurRadius: 10,
+            offset: Offset(0, -4),
+          ),
+        ],
+      ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'المجموع الفرعي:',
-                style: TextStyle(fontSize: 16),
-              ),
-              Text(
-                '${subtotal.toStringAsFixed(2)} ر.س',
-                style: TextStyle(fontSize: 16),
-              ),
+              const Text('إجمالي الطلب', style: TextStyle(color: Colors.grey)),
+              Text('${subtotal.toStringAsFixed(2)} ر.س'),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'رسوم التوصيل:',
-                style: TextStyle(fontSize: 16),
-              ),
-              Text(
-                '${deliveryFee.toStringAsFixed(2)} ر.س',
-                style: TextStyle(fontSize: 16),
-              ),
+              const Text('رسوم التوصيل', style: TextStyle(color: Colors.grey)),
+              Text('${deliveryFee.toStringAsFixed(2)} ر.س'),
             ],
           ),
-          SizedBox(height: 8),
+          const Divider(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'المجموع:',
+              const Text(
+                'الإجمالي',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               Text(
                 '${total.toStringAsFixed(2)} ر.س',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -274,7 +281,7 @@ class CartScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(
+              child: const Text(
                 'إتمام الطلب',
                 style: TextStyle(fontSize: 16),
               ),
@@ -289,12 +296,12 @@ class CartScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('تفريغ السلة'),
-        content: Text('هل أنت متأكد من رغبتك في حذف جميع الوجبات من السلة؟'),
+        title: const Text('تفريغ السلة'),
+        content: const Text('هل أنت متأكد من رغبتك في حذف جميع الوجبات من السلة؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('إلغاء'),
+            child: const Text('إلغاء'),
           ),
           TextButton(
             onPressed: () {
@@ -302,7 +309,7 @@ class CartScreen extends StatelessWidget {
               Navigator.of(ctx).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('تم تفريغ السلة بنجاح'),
+                  content: const Text('تم تفريغ السلة بنجاح'),
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -313,7 +320,7 @@ class CartScreen extends StatelessWidget {
             style: TextButton.styleFrom(
               foregroundColor: Colors.red,
             ),
-            child: Text('حذف الكل'),
+            child: const Text('حذف الكل'),
           ),
         ],
       ),
@@ -324,12 +331,12 @@ class CartScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('تأكيد الطلب'),
-        content: Text('هل أنت متأكد من إتمام الطلب؟'),
+        title: const Text('تأكيد الطلب'),
+        content: const Text('هل أنت متأكد من إتمام الطلب؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('إلغاء'),
+            child: const Text('إلغاء'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -344,7 +351,7 @@ class CartScreen extends StatelessWidget {
                 context: context,
                 barrierDismissible: false,
                 builder: (ctx) => AlertDialog(
-                  title: Text('تم الطلب بنجاح'),
+                  title: const Text('تم الطلب بنجاح'),
                   content: Text('تم استلام طلبك المكون من $totalItems عنصر بنجاح. سنقوم بتحديثك بحالة الطلب.'),
                   actions: [
                     TextButton(
@@ -353,7 +360,7 @@ class CartScreen extends StatelessWidget {
                         // Navigate to orders screen when implemented
                         // Navigator.pushReplacementNamed(context, '/orders');
                       },
-                      child: Text('حسناً'),
+                      child: const Text('حسناً'),
                     ),
                   ],
                 ),
@@ -362,7 +369,7 @@ class CartScreen extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
             ),
-            child: Text('تأكيد'),
+            child: const Text('تأكيد'),
           ),
         ],
       ),

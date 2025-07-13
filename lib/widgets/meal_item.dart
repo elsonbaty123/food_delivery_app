@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../models/meal.dart';
 import '../models/enums.dart';
 import '../screens/meal_details/meal_details_screen.dart';
 
@@ -13,38 +11,34 @@ class MealItem extends StatelessWidget {
   final Affordability affordability;
 
   const MealItem({
-    Key? key,
+    super.key,
     required this.id,
     required this.title,
     required this.imageUrl,
     required this.duration,
     required this.complexity,
     required this.affordability,
-  }) : super(key: key);
+  });
 
   String get complexityText {
     switch (complexity) {
-      case Complexity.Simple:
+      case Complexity.simple:
         return 'بسيط';
-      case Complexity.Challenging:
+      case Complexity.challenging:
         return 'متوسط';
-      case Complexity.Hard:
+      case Complexity.hard:
         return 'صعب';
-      default:
-        return 'غير معروف';
     }
   }
 
   String get affordabilityText {
     switch (affordability) {
-      case Affordability.Affordable:
+      case Affordability.affordable:
         return 'رخيص';
-      case Affordability.Pricey:
+      case Affordability.pricey:
         return 'متوسط';
-      case Affordability.Luxurious:
+      case Affordability.luxurious:
         return 'غالي';
-      default:
-        return 'غير معروف';
     }
   }
 

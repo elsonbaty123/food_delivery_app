@@ -1,21 +1,26 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
-import '../utils/constants.dart';
 
 class AuthProvider with ChangeNotifier {
+  late GlobalKey<NavigatorState> navigatorKey;
+
   UserModel? _user;
   bool _isLoading = false;
   String? _error;
+  GlobalKey<NavigatorState>? _navigatorKey;
 
   UserModel? get user => _user;
   UserModel? get currentUser => _user; // Alias for user to maintain backward compatibility
   bool get isAuthenticated => _user != null;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  void setNavigatorKey(GlobalKey<NavigatorState> key) {
+    _navigatorKey = key;
+  }
 
   // Load user data (refresh from server)
   Future<void> loadUserData() async {
@@ -239,6 +244,13 @@ class AuthProvider with ChangeNotifier {
       _error = null;
       notifyListeners();
       
+      // Navigate to home screen after logout
+      if (_navigatorKey?.currentContext != null) {
+        Navigator.of(_navigatorKey!.currentContext!).pushNamedAndRemoveUntil(
+          '/',
+          (Route<dynamic> route) => false,
+        );
+      }
     } catch (e) {
       debugPrint('Error during logout: $e');
       rethrow;

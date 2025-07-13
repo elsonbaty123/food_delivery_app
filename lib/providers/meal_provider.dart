@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../models/meal.dart';
 import '../models/user_model.dart';
 import 'auth_provider.dart';
 
 class MealProvider with ChangeNotifier {
-  List<String> _favoriteMealIds = [];
+  final List<String> _favoriteMealIds = [];
   final List<Meal> _meals = [
     // Sample meals - in a real app, this would come from an API
     Meal(
@@ -121,6 +120,15 @@ class MealProvider with ChangeNotifier {
   Future<void> addMeal(Meal meal) async {
     _meals.add(meal);
     notifyListeners();
+    
+    // In a real app, you would also update the backend here
+    try {
+      // await apiService.addMeal(meal);
+    } catch (error) {
+      _meals.remove(meal);
+      notifyListeners();
+      rethrow;
+    }
   }
 
   Future<void> updateMeal(Meal meal) async {

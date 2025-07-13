@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:geolocator/geolocator.dart';
 import '../models/location_model.dart';
 import '../services/location_service.dart';
 

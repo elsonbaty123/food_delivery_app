@@ -30,12 +30,14 @@ class _AddressesScreenState extends State<AddressesScreen> {
     setState(() {
       _isLoading = true;
     });
+    // Capture context-dependent objects before the async gap.
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
       await Provider.of<AddressesProvider>(context, listen: false)
           .fetchAndSetAddresses();
     } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (scaffoldMessenger.mounted) {
+        scaffoldMessenger.showSnackBar(
           const SnackBar(
             content: Text('حدث خطأ أثناء تحميل العناوين'),
             backgroundColor: Colors.red,
@@ -54,7 +56,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
   @override
   Widget build(BuildContext context) {
     final addressesData = Provider.of<AddressesProvider>(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('عناويني'),
@@ -117,10 +119,11 @@ class _AddressesScreenState extends State<AddressesScreen> {
                             ),
                             title: Text(
                               address.title,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             subtitle: Text(
-                              '${address.fullAddress}\n${address.additionalDirections.isNotEmpty ? address.additionalDirections + '\n' : ''}مبنى ${address.buildingNumber} - الطابق ${address.floor} - شقة ${address.apartment}',
+                              '${address.fullAddress}\n${address.additionalDirections.isNotEmpty ? '${address.additionalDirections}\n' : ''}مبنى ${address.buildingNumber} - الطابق ${address.floor} - شقة ${address.apartment}',
                             ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -138,37 +141,48 @@ class _AddressesScreenState extends State<AddressesScreen> {
                                 IconButton(
                                   icon: const Icon(Icons.delete),
                                   onPressed: () async {
-                                    try {
-                                      await showDialog(
-                                        context: context,
-                                        builder: (ctx) => AlertDialog(
-                                          title: const Text('تأكيد الحذف'),
-                                          content: const Text(
-                                              'هل أنت متأكد من حذف هذا العنوان؟'),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.of(ctx).pop(false),
-                                              child: const Text('إلغاء'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.of(ctx).pop(true),
-                                              child: const Text('حذف'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    } catch (error) {
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                                'حدث خطأ أثناء حذف العنوان'),
-                                            backgroundColor: Colors.red,
+                                    final scaffoldMessenger = ScaffoldMessenger.of(context);
+                                    final addressesProvider = Provider.of<AddressesProvider>(context, listen: false);
+
+                                    final confirmDelete = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('تأكيد الحذف'),
+                                        content: const Text('هل أنت متأكد من حذف هذا العنوان؟'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.of(ctx).pop(false),
+                                            child: const Text('إلغاء'),
                                           ),
-                                        );
+                                          TextButton(
+                                            onPressed: () => Navigator.of(ctx).pop(true),
+                                            style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                            child: const Text('حذف'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+
+                                    if (confirmDelete == true) {
+                                      try {
+                                        await addressesProvider.deleteAddress(address.id);
+                                        if (scaffoldMessenger.mounted) {
+                                          scaffoldMessenger.showSnackBar(
+                                            const SnackBar(
+                                              content: Text('تم حذف العنوان بنجاح'),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                        }
+                                      } catch (error) {
+                                        if (scaffoldMessenger.mounted) {
+                                          scaffoldMessenger.showSnackBar(
+                                            const SnackBar(
+                                              content: Text('حدث خطأ أثناء حذف العنوان'),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                        }
                                       }
                                     }
                                   },

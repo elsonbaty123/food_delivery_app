@@ -20,6 +20,9 @@ import 'screens/auth/forgot_password_screen.dart';
 import 'screens/location/location_search_screen.dart';
 import 'screens/chef/manage_meals_screen.dart';
 import 'screens/chef/edit_meal_screen.dart';
+import 'screens/chef/chef_dashboard_screen.dart';
+import 'screens/chef/coupon_management_screen.dart';
+import 'screens/chef/new_orders_screen.dart';
 
 // Constants
 import 'constants/app_constants.dart';
@@ -52,28 +55,38 @@ void main() {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
       ],
-      child: const FoodDeliveryApp(),
+      child: FoodDeliveryApp(),
     ),
   );
 }
 
 class FoodDeliveryApp extends StatelessWidget {
-  const FoodDeliveryApp({super.key});
+  FoodDeliveryApp({super.key}) {
+    navigatorKey = GlobalKey<NavigatorState>();
+    scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+  }
+  
+  late final GlobalKey<NavigatorState> navigatorKey;
+  late final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
 
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
+        authProvider.setNavigatorKey(navigatorKey);
         return MaterialApp(
+          navigatorKey: navigatorKey,
           title: 'مطبخ البيت',
           debugShowCheckedModeBanner: false,
+          scaffoldMessengerKey: scaffoldMessengerKey,
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: const [
-            Locale('ar', 'SA'), // Arabic
+            Locale('ar', 'SA'), 
+            Locale('en', 'US'),
           ],
           locale: const Locale('ar', 'SA'),
           themeMode: ThemeMode.light,
@@ -84,7 +97,7 @@ class FoodDeliveryApp extends StatelessWidget {
                   displayColor: AppColors.textPrimary,
                 ),
           ),
-          initialRoute: '/',
+          home: const HomeScreen(),
           routes: {
             // Auth Routes
             LoginScreen.routeName: (ctx) => const LoginScreen(),
@@ -92,25 +105,26 @@ class FoodDeliveryApp extends StatelessWidget {
             ForgotPasswordScreen.routeName: (ctx) => const ForgotPasswordScreen(),
             
             // Main App Routes
-            '/': (ctx) => const HomeScreen(),
-                
-            // Chef Routes
+            ChefDashboardScreen.routeName: (ctx) => const ChefDashboardScreen(),
             ManageMealsScreen.routeName: (ctx) => const ManageMealsScreen(),
             EditMealScreen.routeName: (ctx) => const EditMealScreen(),
-            // Feature Screens
+            CouponManagementScreen.routeName: (ctx) => const CouponManagementScreen(),
+            NewOrdersScreen.routeName: (ctx) => const NewOrdersScreen(),
+            
+            // Other Routes
             CategoriesScreen.routeName: (ctx) => const CategoriesScreen(),
             CartScreen.routeName: (ctx) => const CartScreen(),
-            SearchScreen.routeName: (ctx) => const SearchScreen(),
-            LocationSearchScreen.routeName: (ctx) => const LocationSearchScreen(),
             ProfileScreen.routeName: (ctx) => const ProfileScreen(),
             OrdersScreen.routeName: (ctx) => const OrdersScreen(),
-            AddressesScreen.routeName: (ctx) => const AddressesScreen(),
-            AddEditAddressScreen.routeName: (ctx) => const AddEditAddressScreen(),
-            FavoritesScreen.routeName: (ctx) => const FavoritesScreen(),
             MealDetailsScreen.routeName: (ctx) {
               final args = ModalRoute.of(ctx)!.settings.arguments;
               return MealDetailsScreen(mealId: args as String);
             },
+            SearchScreen.routeName: (ctx) => const SearchScreen(),
+            LocationSearchScreen.routeName: (ctx) => const LocationSearchScreen(),
+            AddressesScreen.routeName: (ctx) => const AddressesScreen(),
+            AddEditAddressScreen.routeName: (ctx) => const AddEditAddressScreen(),
+            FavoritesScreen.routeName: (ctx) => const FavoritesScreen(),
           },
 
         );
@@ -129,21 +143,13 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   late PageController _pageController;
-  
+
   // List of screens for the bottom navigation bar
   final List<Widget> _screens = [
     const HomeScreen(),
     const CategoriesScreen(),
     const CartScreen(),
     const OrdersScreen(),
-    const ProfileScreen(),
-  ];
-
-  final List<Widget> _pages = [
-    const HomeScreen(),
-    const CategoriesScreen(),
-    const OrdersScreen(),
-    const CartScreen(),
     const ProfileScreen(),
   ];
 
@@ -167,61 +173,32 @@ class _HomePageState extends State<HomePage> {
 
   void _onItemTapped(int index) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
-    if (index == 3) { // Profile tab
-      if (!authProvider.isAuthenticated) {
-        // Show auth screen in a dialog
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (context) => const LoginScreen(),
-        );
-        return;
-      }
-    } else if (index == 2) { // Cart tab
-      if (!authProvider.isAuthenticated) {
-        // Show auth screen in a dialog
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (context) => const LoginScreen(),
-        );
-        return;
-      }
-    }
-    
-    setState(() {
-      _currentIndex = index;
-      _pageController.jumpToPage(index);
-    });
-  }
 
-  Widget _buildAuthScreen() {
-    return Navigator(
-      onGenerateRoute: (settings) {
-        switch (settings.name) {
-          case SignUpScreen.routeName:
-            return MaterialPageRoute(builder: (_) => const SignUpScreen());
-          case ForgotPasswordScreen.routeName:
-            return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
-          case LoginScreen.routeName:
-          default:
-            return MaterialPageRoute(builder: (_) => const LoginScreen());
-        }
-      },
-    );
+    // Indices 2 (Cart) and 4 (Profile) require authentication.
+    final requiresAuth = index == 2 || index == 4;
+
+    if (requiresAuth && !authProvider.isAuthenticated) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => const LoginScreen(),
+      );
+    } else {
+      setState(() {
+        _currentIndex = index;
+        _pageController.jumpToPage(index);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    
     return Scaffold(
       body: PageView(
         controller: _pageController,
+        onPageChanged: _onPageChanged,
         physics: const NeverScrollableScrollPhysics(),
         children: _screens,
-        onPageChanged: _onPageChanged,
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,

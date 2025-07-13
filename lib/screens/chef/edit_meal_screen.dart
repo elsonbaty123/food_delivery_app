@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../providers/meal_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/meal.dart';
@@ -19,6 +21,21 @@ class _EditMealScreenState extends State<EditMealScreen> {
   late Meal _editedMeal;
   bool _isInit = true;
   bool _isLoading = false;
+  File? _pickedImage;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedImage = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 600,
+    );
+    
+    if (pickedImage != null) {
+      setState(() {
+        _pickedImage = File(pickedImage.path);
+      });
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -41,8 +58,8 @@ class _EditMealScreenState extends State<EditMealScreen> {
           ingredients: [],
           nutrition: {'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0},
           preparationTime: 30,
-          complexity: Complexity.Simple,
-          affordability: Affordability.Affordable,
+          complexity: Complexity.simple,
+          affordability: Affordability.affordable,
           rating: 0,
         );
       } else {
@@ -58,8 +75,8 @@ class _EditMealScreenState extends State<EditMealScreen> {
           ingredients: [],
           nutrition: {'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0},
           preparationTime: 30,
-          complexity: Complexity.Simple,
-          affordability: Affordability.Affordable,
+          complexity: Complexity.simple,
+          affordability: Affordability.affordable,
           rating: 0,
         );
       }
@@ -75,16 +92,20 @@ class _EditMealScreenState extends State<EditMealScreen> {
     _formKey.currentState?.save();
     setState(() => _isLoading = true);
 
+    final mealProvider = Provider.of<MealProvider>(context, listen: false);
+    final navigator = Navigator.of(context);
+
     try {
       if (_editedMeal.id.isEmpty) {
-        await Provider.of<MealProvider>(context, listen: false)
-          .addMeal(_editedMeal);
+        await mealProvider.addMeal(_editedMeal);
       } else {
-        await Provider.of<MealProvider>(context, listen: false)
-          .updateMeal(_editedMeal);
+        await mealProvider.updateMeal(_editedMeal);
       }
-      Navigator.of(context).pop();
+
+      if (!mounted) return;
+      navigator.pop();
     } catch (error) {
+      if (!mounted) return;
       await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -99,7 +120,9 @@ class _EditMealScreenState extends State<EditMealScreen> {
         ),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -172,32 +195,24 @@ class _EditMealScreenState extends State<EditMealScreen> {
                     ),
                     const SizedBox(height: 20),
                     GestureDetector(
-                      onTap: () {
-                        // TODO: Implement image picker
-                      },
+                      onTap: _pickImage,
                       child: Container(
-                        height: 200,
+                        height: 150,
+                        width: double.infinity,
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(width: 1, color: Colors.grey),
                         ),
-                        child: _editedMeal.imageUrl.isEmpty
-                            ? const Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.add_a_photo, size: 50),
-                                    Text('إضافة صورة للوجبة'),
-                                  ],
-                                ),
-                              )
-                            : ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  _editedMeal.imageUrl,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
+                        child: _pickedImage != null
+                            ? Image.file(_pickedImage!, fit: BoxFit.cover)
+                            : _editedMeal.imageUrl.isNotEmpty
+                                ? Image.network(_editedMeal.imageUrl, fit: BoxFit.cover)
+                                : const Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.add_a_photo, size: 50),
+                                      Text('اضغط لإضافة صورة')
+                                    ],
+                                  ),
                       ),
                     ),
                   ],

@@ -356,6 +356,9 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   }
 
   Future<void> _showCancelOrderDialog(BuildContext context, Order order) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -375,31 +378,28 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     );
 
     if (confirmed == true) {
-      final orderProvider = Provider.of<OrderProvider>(context, listen: false);
       final success = await orderProvider.cancelOrder(
         order.id,
         reason: 'Cancelled by user',
       );
-      
+
       if (success) {
-        // Update the order status locally for immediate feedback
         orderProvider.updateOrderStatus(
           order.id,
           OrderStatus.cancelled,
           cancellationReason: 'Cancelled by user',
         );
       }
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success ? 'Order cancelled' : 'Failed to cancel order',
-            ),
-            backgroundColor: success ? Colors.green : Colors.red,
+
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            success ? 'Order cancelled' : 'Failed to cancel order',
           ),
-        );
-      }
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
     }
   }
 }
@@ -736,7 +736,7 @@ class OrderDetailsScreen extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: isCompleted
-                ? Icon(
+                ? const Icon(
                     Icons.check,
                     size: 16,
                     color: Colors.white,

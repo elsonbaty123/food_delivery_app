@@ -13,7 +13,7 @@ import 'package:food_delivery_app/main.dart';
 void main() {
   testWidgets('Navigates to Orders Screen', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const FoodDeliveryApp());
+    await tester.pumpWidget(FoodDeliveryApp());
 
     // Verify that the initial screen is the Home Screen.
     expect(find.text('الرئيسية'), findsOneWidget); // 'Home' in Arabic

@@ -10,10 +10,10 @@ import '../../utils/validators.dart';
 class LoginScreen extends StatefulWidget {
   static const routeName = '/login';
 
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -31,23 +31,25 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isLoading = true);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.login(
         _emailController.text.trim(),
         _passwordController.text,
       );
 
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/');
+      if (navigator.mounted) {
+        navigator.pushReplacementNamed('/');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (scaffoldMessenger.mounted) {
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text('خطأ في تسجيل الدخول: ${e.toString()}'),
             backgroundColor: Colors.red,
@@ -143,7 +145,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.centerLeft,
                   child: TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, ForgotPasswordScreen.routeName);
+                      Navigator.pushNamed(
+                          context, ForgotPasswordScreen.routeName);
                     },
                     child: const Text('نسيت كلمة المرور؟'),
                   ),
@@ -154,9 +157,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 PrimaryButton(
                   onPressed: _isLoading ? null : _login,
                   child: _isLoading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Text('تسجيل الدخول'),
                 ),

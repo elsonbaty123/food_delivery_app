@@ -35,7 +35,7 @@ class LocationService {
         desiredAccuracy: LocationAccuracy.high,
       );
     } catch (e) {
-      print('Error getting location: $e');
+      // TODO: Handle or log this error appropriately
       return null;
     }
   }
@@ -49,7 +49,7 @@ class LocationService {
         return '${place.street}, ${place.locality}, ${place.administrativeArea}, ${place.country}';
       }
     } catch (e) {
-      print('Error getting address: $e');
+      // TODO: Handle or log this error appropriately
     }
     return null;
   }
@@ -73,7 +73,7 @@ class LocationService {
         );
       }
     } catch (e) {
-      print('Error getting coordinates: $e');
+      // TODO: Handle or log this error appropriately
     }
     return null;
   }

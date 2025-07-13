@@ -7,12 +7,12 @@ class SectionHeader extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
 
   const SectionHeader({
-    Key? key,
+    super.key,
     required this.title,
     this.subtitle,
     this.trailing,
     this.padding = const EdgeInsets.symmetric(vertical: 8.0),
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,7 @@ class SectionHeader extends StatelessWidget {
                   Text(
                     subtitle!,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                      color: theme.textTheme.bodySmall?.color?.withAlpha((0.7 * 255).round()),
                     ),
                     textAlign: TextAlign.right,
                   ),

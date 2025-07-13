@@ -205,11 +205,11 @@ class ProfileScreen extends StatelessWidget {
   // Dialogs and Bottom Sheets
   void _showComingSoonSnackBar(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('سيتم تنفيذ هذه الميزة قريباً'),
+      SnackBar(
+        content: const Text('سيتم تنفيذ هذه الميزة قريباً'),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
+          borderRadius: BorderRadius.circular(8),
         ),
       ),
     );

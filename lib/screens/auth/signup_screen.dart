@@ -10,10 +10,10 @@ import '../../utils/validators.dart';
 class SignUpScreen extends StatefulWidget {
   static const routeName = '/signup';
 
-  const SignUpScreen({Key? key}) : super(key: key);
+  const SignUpScreen({super.key});
 
   @override
-  _SignUpScreenState createState() => _SignUpScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
@@ -39,12 +39,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<void> _signUp() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isLoading = true);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.signUp(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
@@ -53,12 +55,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
         password: _passwordController.text,
       );
 
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/');
+      if (navigator.mounted) {
+        navigator.pushReplacementNamed('/');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (scaffoldMessenger.mounted) {
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text('خطأ في إنشاء الحساب: ${e.toString()}'),
             backgroundColor: Colors.red,
@@ -75,7 +77,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       appBar: AppBar(
@@ -91,7 +92,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Logo and Welcome Text
-                SizedBox(height: size.height * 0.02),
+                const SizedBox(height: 16),
                 Icon(
                   Icons.restaurant_menu_rounded,
                   size: 60,
@@ -124,6 +125,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   textInputAction: TextInputAction.next,
                   validator: Validators.validateName,
                   textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.right,
                 ),
                 const SizedBox(height: 16),
 
@@ -146,7 +148,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   controller: _phoneController,
                   label: 'رقم الهاتف',
                   hint: 'أدخل رقم هاتفك',
-                  prefixIcon: const Icon(Icons.phone_android_outlined),
+                  prefixIcon: const Icon(Icons.phone_outlined),
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.next,
                   validator: Validators.validatePhone,
@@ -210,7 +212,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 // User Type Selection
                 const SizedBox(height: 16),
-                Text("نوع المستخدم", style: Theme.of(context).textTheme.bodyLarge),
+                const Text(
+                  "نوع المستخدم",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -250,9 +255,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 PrimaryButton(
                   onPressed: _isLoading ? null : _signUp,
                   child: _isLoading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Text('إنشاء الحساب'),
                 ),
@@ -262,6 +271,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    const Text(
+                      'لديك حساب بالفعل؟',
+                    ),
                     TextButton(
                       onPressed: () {
                         Navigator.pushReplacementNamed(
@@ -276,10 +288,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                    Text(
-                      'لديك حساب بالفعل؟',
-                      style: theme.textTheme.bodyMedium,
                     ),
                   ],
                 ),

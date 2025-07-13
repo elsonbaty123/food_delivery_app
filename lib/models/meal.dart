@@ -29,8 +29,8 @@ class Meal {
     this.isPopular = false,
     this.isRecommended = false,
     this.preparationTime = 30,
-    this.complexity = Complexity.Simple,
-    this.affordability = Affordability.Affordable,
+    this.complexity = Complexity.simple,
+    this.affordability = Affordability.affordable,
     required this.ingredients,
     required this.nutrition,
   });

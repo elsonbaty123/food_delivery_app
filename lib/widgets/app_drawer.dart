@@ -13,15 +13,6 @@ import '../screens/profile_screen.dart';
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
-  void _showComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('هذه الميزة قريباً!'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -31,13 +22,17 @@ class AppDrawer extends StatelessWidget {
           Consumer<AuthProvider>(
             builder: (ctx, auth, _) {
               final user = auth.currentUser;
+              final name = user?.name;
+              final String initial = (name != null && name.isNotEmpty)
+                  ? name[0].toUpperCase()
+                  : 'G';
               return UserAccountsDrawerHeader(
                 accountName: Text(user?.name ?? 'Guest'),
                 accountEmail: Text(user?.email ?? 'guest@example.com'),
                 currentAccountPicture: CircleAvatar(
                   backgroundColor: Theme.of(context).primaryColor,
                   child: Text(
-                    (user?.name?.isNotEmpty ?? false) ? user!.name![0].toUpperCase() : 'G',
+                    initial,
                     style: const TextStyle(fontSize: 40.0, color: Colors.white),
                   ),
                 ),
